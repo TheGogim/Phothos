@@ -182,16 +182,109 @@ video, audio {
     height: auto;
 }
 
-/* Protección adicional para reproductores */
-video::-webkit-media-controls-download-button,
-audio::-webkit-media-controls-download-button {
+/* Reproductores personalizados protegidos */
+.custom-protected-player {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.custom-protected-player video,
+.custom-protected-player audio {
+    outline: none !important;
+    border: none;
+}
+
+/* Ocultar controles de descarga en reproductores nativos */
+.custom-protected-player video::-webkit-media-controls-download-button,
+.custom-protected-player audio::-webkit-media-controls-download-button {
     display: none !important;
 }
 
-video::-webkit-media-controls-fullscreen-button {
+.custom-protected-player video::-webkit-media-controls-fullscreen-button {
     display: none !important;
 }
 
+.custom-protected-player video::-webkit-media-controls-picture-in-picture-button {
+    display: none !important;
+}
+
+/* Estilos para reproductores personalizados */
+.custom-media-player video {
+    outline: none;
+    border: none;
+}
+
+.custom-media-player audio {
+    outline: none;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 8px;
+}
+
+/* Animaciones para indicadores de reproducción */
+@keyframes pulse-play {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.1); }
+}
+
+.animate-pulse-play {
+    animation: pulse-play 2s infinite;
+}
+
+/* Estilos para barras de progreso personalizadas */
+.custom-progress-bar {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    height: 8px;
+    cursor: pointer;
+    transition: height 0.2s ease;
+}
+
+.custom-progress-bar:hover {
+    height: 12px;
+}
+
+.custom-progress-fill {
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    border-radius: 10px;
+    height: 100%;
+    transition: width 0.1s ease;
+}
+
+/* Botones de control personalizados */
+.custom-control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* Protección contra interacciones no deseadas */
+.custom-protected-player * {
+    pointer-events: auto;
+}
+
+.custom-protected-player video {
+    pointer-events: none;
+}
+
+.custom-protected-player audio {
+    pointer-events: none;
+}
 /* Estilos para iconos de tipo de archivo */
 .media-type-indicator {
     position: absolute;
