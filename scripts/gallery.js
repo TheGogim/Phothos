@@ -740,10 +740,21 @@ class GalleryApp {
      */
     showImageViewer(file) {
         this.currentImageFile = file;
-        document.getElementById('viewerImage').src = file.path;
+        
+        const viewerContainer = document.getElementById('imageViewerModal');
+        const imageElement = document.getElementById('viewerImage');
+        
+        // Limpiar contenido anterior
+        const existingMedia = viewerContainer.querySelector('video, audio, .custom-media-player');
+        if (existingMedia) {
+            existingMedia.remove();
+        }
+        
+        imageElement.style.display = 'block';
+        imageElement.src = file.path;
         document.getElementById('viewerTitle').textContent = file.name;
         document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
-        document.getElementById('imageViewerModal').classList.remove('hidden');
+        viewerContainer.classList.remove('hidden');
     }
 
     /**
@@ -759,50 +770,71 @@ class GalleryApp {
         const imageElement = document.getElementById('viewerImage');
         
         // Limpiar contenido anterior
-        const existingMedia = viewerContainer.querySelector('video, audio');
+        const existingMedia = viewerContainer.querySelector('video, audio, .custom-media-player');
         if (existingMedia) {
             existingMedia.remove();
         }
         
+        imageElement.style.display = 'none';
+        
         if (isVideo) {
-            imageElement.style.display = 'none';
-            const videoElement = document.createElement('video');
-            videoElement.src = file.path;
-            videoElement.controls = true;
-            videoElement.className = 'max-w-full max-h-screen object-contain mx-auto rounded-lg';
-            videoElement.style.maxHeight = '80vh';
-            imageElement.parentNode.insertBefore(videoElement, imageElement);
+            this.createCustomVideoPlayer(file, imageElement.parentNode, imageElement);
         } else if (isAudio) {
-            imageElement.style.display = 'none';
-            const audioContainer = document.createElement('div');
-            audioContainer.className = 'flex flex-col items-center justify-center p-8';
-            audioContainer.innerHTML = `
-                <div class="w-48 h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                    </svg>
-                </div>
-                <audio src="${file.path}" controls class="w-full max-w-md">
-                    Tu navegador no soporta la reproducción de audio.
-                </audio>
-            `;
-            imageElement.parentNode.insertBefore(audioContainer, imageElement);
-        } else {
-            imageElement.style.display = 'block';
-            imageElement.src = file.path;
+            this.createCustomAudioPlayer(file, imageElement.parentNode, imageElement);
         }
         
         document.getElementById('viewerTitle').textContent = file.name;
         document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
         viewerContainer.classList.remove('hidden');
     }
+
+    /**
+     * Crea un reproductor de video personalizado
+     */
+    createCustomVideoPlayer(file, container, beforeElement) {
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'custom-media-player relative max-w-4xl mx-auto';
+        
+        playerContainer.innerHTML = `
+            <video class="w-full max-h-[80vh] object-contain rounded-lg bg-black" 
+                   src="${file.path}" 
+                   controls
+                   preload="metadata">
+                Tu navegador no soporta la reproducción de video.
+            </video>
+        `;
+        
+        container.insertBefore(playerContainer, beforeElement);
+    }
+
+    /**
+     * Crea un reproductor de audio personalizado
+     */
+    createCustomAudioPlayer(file, container, beforeElement) {
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'custom-media-player flex flex-col items-center justify-center p-8 max-w-2xl mx-auto';
+        
+        playerContainer.innerHTML = `
+            <div class="w-64 h-64 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-8 shadow-2xl">
+                <svg class="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+            </div>
+            <audio src="${file.path}" controls class="w-full max-w-lg rounded-lg">
+                Tu navegador no soporta la reproducción de audio.
+            </audio>
+        `;
+        
+        container.insertBefore(playerContainer, beforeElement);
+    }
+
     /**
      * Oculta el visor de imágenes
      */
     hideImageViewer() {
         // Limpiar elementos de media
         const viewerContainer = document.getElementById('imageViewerModal');
-        const existingMedia = viewerContainer.querySelectorAll('video, audio, .flex.flex-col');
+        const existingMedia = viewerContainer.querySelectorAll('video, audio, .custom-media-player');
         existingMedia.forEach(el => el.remove());
         
         // Restaurar imagen

@@ -295,19 +295,11 @@
             <img id="viewerImage" class="max-w-full max-h-screen object-contain" alt="">
             
             <!-- Controles del visor -->
-            <div class="image-viewer-controls">
-                <button id="downloadImageBtn" onclick="window.gallery.downloadCurrentImage()">
-                    📥 Descargar
-                </button>
-                <button id="editImageBtn" onclick="window.gallery.editCurrentImage()">
-                    ✏️ Editar
-                </button>
-                <button id="shareImageBtn" onclick="window.gallery.shareCurrentImage()">
-                    🔗 Compartir
-                </button>
+            <div class="image-viewer-controls hidden">
+                <!-- Controles ocultos por defecto, se muestran solo para imágenes -->
             </div>
             
-            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4">
+            <div class="absolute bottom-4 left-4 right-4 bg-black bg-opacity-60 backdrop-blur-sm rounded-lg p-4 pointer-events-none">
                 <h4 id="viewerTitle" class="font-semibold"></h4>
                 <p id="viewerDescription" class="text-sm opacity-75"></p>
             </div>

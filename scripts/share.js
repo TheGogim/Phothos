@@ -322,11 +322,20 @@ class ShareViewer {
      * @param {Object} file - Datos del archivo
      */
     showImageViewer(file) {
-
-        document.getElementById('viewerImage').src = file.path;
+        const viewerContainer = document.getElementById('imageViewerModal');
+        const imageElement = document.getElementById('viewerImage');
+        
+        // Limpiar contenido anterior
+        const existingMedia = viewerContainer.querySelector('.custom-protected-player');
+        if (existingMedia) {
+            existingMedia.remove();
+        }
+        
+        imageElement.style.display = 'block';
+        imageElement.src = file.path;
         document.getElementById('viewerTitle').textContent = file.name;
         document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
-        document.getElementById('imageViewerModal').classList.remove('hidden');
+        viewerContainer.classList.remove('hidden');
     }
 
     /**
@@ -341,34 +350,17 @@ class ShareViewer {
         const imageElement = document.getElementById('viewerImage');
         
         // Limpiar contenido anterior
-        const existingMedia = viewerContainer.querySelector('video, audio, .media-container');
+        const existingMedia = viewerContainer.querySelector('.custom-protected-player');
         if (existingMedia) {
             existingMedia.remove();
         }
         
+        imageElement.style.display = 'none';
+        
         if (isVideo) {
-            imageElement.style.display = 'none';
-            const videoElement = document.createElement('video');
-            videoElement.src = file.path;
-            videoElement.controls = true;
-            videoElement.className = 'max-w-full max-h-screen object-contain mx-auto rounded-lg';
-            videoElement.style.maxHeight = '80vh';
-            imageElement.parentNode.insertBefore(videoElement, imageElement);
+            this.createProtectedVideoPlayer(file, imageElement.parentNode, imageElement);
         } else if (isAudio) {
-            imageElement.style.display = 'none';
-            const audioContainer = document.createElement('div');
-            audioContainer.className = 'media-container flex flex-col items-center justify-center p-8';
-            audioContainer.innerHTML = `
-                <div class="w-48 h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                    </svg>
-                </div>
-                <audio src="${file.path}" controls class="w-full max-w-md">
-                    Tu navegador no soporta la reproducción de audio.
-                </audio>
-            `;
-            imageElement.parentNode.insertBefore(audioContainer, imageElement);
+            this.createProtectedAudioPlayer(file, imageElement.parentNode, imageElement);
         }
         
         document.getElementById('viewerTitle').textContent = file.name;
@@ -377,65 +369,246 @@ class ShareViewer {
     }
 
     /**
-     * Muestra el visor protegido para medios
-     * @param {Object} file - Datos del archivo
+     * Crea un reproductor de video protegido personalizado
      */
-    showProtectedMediaViewer(file) {
-        const isVideo = file.type.startsWith('video/');
-        const isAudio = file.type.startsWith('audio/');
+    createProtectedVideoPlayer(file, container, beforeElement) {
+        const playerId = 'protectedVideo_' + Date.now();
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'custom-protected-player relative max-w-4xl mx-auto bg-black rounded-lg overflow-hidden';
         
-        const viewerContainer = document.getElementById('imageViewerModal');
-        const imageElement = document.getElementById('viewerImage');
-        
-        // Limpiar contenido anterior
-        const existingMedia = viewerContainer.querySelector('video, audio, .media-container');
-        if (existingMedia) {
-            existingMedia.remove();
-        }
-        
-        if (isVideo) {
-            imageElement.style.display = 'none';
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'media-container protected-content no-context-menu';
-            videoContainer.innerHTML = `
-                <video src="${file.path}" controls class="max-w-full max-h-screen object-contain mx-auto rounded-lg no-drag" 
-                       style="max-height: 80vh;" controlsList="nodownload" disablePictureInPicture>
-                    Tu navegador no soporta la reproducción de video.
-                </video>
-            `;
-            imageElement.parentNode.insertBefore(videoContainer, imageElement);
-        } else if (isAudio) {
-            imageElement.style.display = 'none';
-            const audioContainer = document.createElement('div');
-            audioContainer.className = 'media-container protected-content no-context-menu flex flex-col items-center justify-center p-8';
-            audioContainer.innerHTML = `
-                <div class="w-48 h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                    </svg>
+        playerContainer.innerHTML = `
+            <video id="${playerId}" class="w-full max-h-[80vh] object-contain" 
+                   src="${file.path}" 
+                   preload="metadata"
+                   style="outline: none;">
+                Tu navegador no soporta la reproducción de video.
+            </video>
+            
+            <!-- Controles personalizados -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent p-4">
+                <div class="flex items-center space-x-4">
+                    <button id="playBtn_${playerId}" class="text-white hover:text-blue-400 transition-colors">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="flex-1 flex items-center space-x-2">
+                        <span id="currentTime_${playerId}" class="text-white text-sm">0:00</span>
+                        <div class="flex-1 bg-gray-600 rounded-full h-2 cursor-pointer" id="progressBar_${playerId}">
+                            <div class="bg-blue-500 h-2 rounded-full transition-all" id="progress_${playerId}" style="width: 0%"></div>
+                        </div>
+                        <span id="duration_${playerId}" class="text-white text-sm">0:00</span>
+                    </div>
+                    
+                    <button id="muteBtn_${playerId}" class="text-white hover:text-blue-400 transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                        </svg>
+                    </button>
+                    
+                    <button id="fullscreenBtn_${playerId}" class="text-white hover:text-blue-400 transition-colors">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                        </svg>
+                    </button>
                 </div>
-                <audio src="${file.path}" controls class="w-full max-w-md no-drag" controlsList="nodownload">
-                    Tu navegador no soporta la reproducción de audio.
-                </audio>
-            `;
-            imageElement.parentNode.insertBefore(audioContainer, imageElement);
-        } else {
-            // Para imágenes protegidas, mostrar mensaje
-            this.showProtectedMessage();
-            return;
-        }
+            </div>
+        `;
         
-        document.getElementById('viewerTitle').textContent = file.name;
-        document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
-        viewerContainer.classList.remove('hidden');
+        container.insertBefore(playerContainer, beforeElement);
+        this.initializeVideoControls(playerId);
     }
+
+    /**
+     * Crea un reproductor de audio protegido personalizado
+     */
+    createProtectedAudioPlayer(file, container, beforeElement) {
+        const playerId = 'protectedAudio_' + Date.now();
+        const playerContainer = document.createElement('div');
+        playerContainer.className = 'custom-protected-player flex flex-col items-center justify-center p-8 max-w-2xl mx-auto';
+        
+        playerContainer.innerHTML = `
+            <div class="w-64 h-64 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-8 shadow-2xl relative">
+                <svg class="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+                
+                <!-- Indicador de reproducción -->
+                <div id="playIndicator_${playerId}" class="absolute inset-0 bg-black bg-opacity-30 rounded-full flex items-center justify-center opacity-0 transition-opacity">
+                    <div class="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                </div>
+            </div>
+            
+            <audio id="${playerId}" src="${file.path}" preload="metadata" style="display: none;">
+                Tu navegador no soporta la reproducción de audio.
+            </audio>
+            
+            <!-- Controles personalizados -->
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 w-full max-w-lg">
+                <div class="flex items-center space-x-4 mb-4">
+                    <button id="playBtn_${playerId}" class="text-white hover:text-blue-400 transition-colors">
+                        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="flex-1">
+                        <div class="text-white font-medium text-lg mb-1 truncate">${file.name}</div>
+                        <div class="flex items-center space-x-2">
+                            <span id="currentTime_${playerId}" class="text-white text-sm">0:00</span>
+                            <div class="flex-1 bg-white bg-opacity-30 rounded-full h-2 cursor-pointer" id="progressBar_${playerId}">
+                                <div class="bg-white h-2 rounded-full transition-all" id="progress_${playerId}" style="width: 0%"></div>
+                            </div>
+                            <span id="duration_${playerId}" class="text-white text-sm">0:00</span>
+                        </div>
+                    </div>
+                    
+                    <button id="muteBtn_${playerId}" class="text-white hover:text-blue-400 transition-colors">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.insertBefore(playerContainer, beforeElement);
+        this.initializeAudioControls(playerId);
+    }
+
+    /**
+     * Inicializa los controles del reproductor de video
+     */
+    initializeVideoControls(playerId) {
+        const video = document.getElementById(playerId);
+        const playBtn = document.getElementById(`playBtn_${playerId}`);
+        const progressBar = document.getElementById(`progressBar_${playerId}`);
+        const progress = document.getElementById(`progress_${playerId}`);
+        const currentTime = document.getElementById(`currentTime_${playerId}`);
+        const duration = document.getElementById(`duration_${playerId}`);
+        const muteBtn = document.getElementById(`muteBtn_${playerId}`);
+        const fullscreenBtn = document.getElementById(`fullscreenBtn_${playerId}`);
+
+        // Play/Pause
+        playBtn.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+                playBtn.innerHTML = '<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+            } else {
+                video.pause();
+                playBtn.innerHTML = '<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+            }
+        });
+
+        // Progress bar
+        video.addEventListener('timeupdate', () => {
+            const percent = (video.currentTime / video.duration) * 100;
+            progress.style.width = percent + '%';
+            currentTime.textContent = this.formatTime(video.currentTime);
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            duration.textContent = this.formatTime(video.duration);
+        });
+
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            video.currentTime = percent * video.duration;
+        });
+
+        // Mute
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.innerHTML = video.muted ? 
+                '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>' :
+                '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>';
+        });
+
+        // Fullscreen
+        fullscreenBtn.addEventListener('click', () => {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            }
+        });
+    }
+
+    /**
+     * Inicializa los controles del reproductor de audio
+     */
+    initializeAudioControls(playerId) {
+        const audio = document.getElementById(playerId);
+        const playBtn = document.getElementById(`playBtn_${playerId}`);
+        const progressBar = document.getElementById(`progressBar_${playerId}`);
+        const progress = document.getElementById(`progress_${playerId}`);
+        const currentTime = document.getElementById(`currentTime_${playerId}`);
+        const duration = document.getElementById(`duration_${playerId}`);
+        const muteBtn = document.getElementById(`muteBtn_${playerId}`);
+        const playIndicator = document.getElementById(`playIndicator_${playerId}`);
+
+        // Play/Pause
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerHTML = '<svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                playIndicator.style.opacity = '1';
+            } else {
+                audio.pause();
+                playBtn.innerHTML = '<svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+                playIndicator.style.opacity = '0';
+            }
+        });
+
+        // Progress bar
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progress.style.width = percent + '%';
+            currentTime.textContent = this.formatTime(audio.currentTime);
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            duration.textContent = this.formatTime(audio.duration);
+        });
+
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        });
+
+        // Mute
+        muteBtn.addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            muteBtn.innerHTML = audio.muted ? 
+                '<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>' :
+                '<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>';
+        });
+
+        // Auto-hide indicator when audio ends
+        audio.addEventListener('ended', () => {
+            playIndicator.style.opacity = '0';
+            playBtn.innerHTML = '<svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+        });
+    }
+
+    /**
+     * Formatea tiempo en segundos a MM:SS
+     */
+    formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
     /**
      * Oculta el visor de imágenes
      */
     hideImageViewer() {
         // Limpiar elementos de media
         const viewerContainer = document.getElementById('imageViewerModal');
-        const existingMedia = viewerContainer.querySelectorAll('video, audio, .media-container');
+        const existingMedia = viewerContainer.querySelectorAll('.custom-protected-player');
         existingMedia.forEach(el => el.remove());
         
         // Restaurar imagen
