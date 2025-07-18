@@ -1,0 +1,318 @@
+
+/* Estilos específicos para la galería */
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 0;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #374151;
+    border: 2px solid transparent;
+}
+
+.gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.gallery-item.selected {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+.gallery-item img,
+.gallery-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img,
+.gallery-item:hover video {
+    transform: scale(1.05);
+}
+
+.gallery-item-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    padding: 1rem;
+    color: white;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .gallery-item-overlay {
+    transform: translateY(0);
+}
+
+.gallery-item-actions {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: flex;
+    space-x: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-item:hover .gallery-item-actions {
+    opacity: 1;
+}
+
+.gallery-item-action {
+    width: 2rem;
+    height: 2rem;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 0.375rem;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.gallery-item-action:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
+}
+
+.gallery-item-select {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-item:hover .gallery-item-select,
+.gallery-item.selected .gallery-item-select {
+    opacity: 1;
+}
+
+.gallery-item-select input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: #8b5cf6;
+}
+
+/* Folder items */
+.folder-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+}
+
+.folder-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #5b21b6, #8b5cf6);
+}
+
+.folder-item.selected {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+}
+
+.folder-item-icon {
+    font-size: 3rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.folder-item-name {
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: 0 1rem;
+    word-break: break-word;
+}
+
+/* Breadcrumb */
+.breadcrumb-item {
+    color: #9ca3af;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item:hover {
+    color: #e5e7eb;
+}
+
+.breadcrumb-item.active {
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+.breadcrumb-separator {
+    color: #6b7280;
+    margin: 0 0.5rem;
+}
+
+/* Upload area */
+.dropzone {
+    border: 2px dashed #6b7280;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: rgba(75, 85, 99, 0.1);
+    cursor: pointer;
+}
+
+.dropzone.dragover {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.1);
+    transform: scale(1.02);
+}
+
+.dropzone:hover {
+    border-color: #a855f7;
+    background: rgba(139, 92, 246, 0.05);
+}
+
+/* Navigation */
+.folder-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    color: #9ca3af;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.folder-nav-item:hover {
+    background: #374151;
+    color: #e5e7eb;
+}
+
+.folder-nav-item.active {
+    background: #8b5cf6;
+    color: white;
+}
+
+.folder-nav-item svg {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .gallery-item-overlay {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .folder-item-icon {
+        font-size: 2rem;
+    }
+    
+    .folder-item-name {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 640px) {
+    aside {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: -100%;
+        height: 100%;
+        z-index: 30;
+        transition: left 0.3s ease;
+    }
+    
+    aside.open {
+        left: 0;
+    }
+    
+    main {
+        width: 100%;
+    }
+}
+
+/* Loading states */
+.loading-skeleton {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Protecciones contra descarga */
+.protected-content {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.protected-content img,
+.protected-content video {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none;
+}
+
+.protected-content::selection {
+    background: transparent;
+}
+
+.protected-content::-moz-selection {
+    background: transparent;
+}
+
+/* Context menu disabled */
+.no-context-menu {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
