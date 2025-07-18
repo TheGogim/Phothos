@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada - Galería Privada</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/><circle cx='12' cy='13' r='3'/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="text-center px-4">
+        <div class="mb-8">
+            <div class="w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                </svg>
+
+            </div>
+            <h1 class="text-6xl font-bold text-gray-800 mb-4">404</h1>
+            <h2 class="text-2xl font-semibold text-gray-600 mb-4">Página no encontrada</h2>
+            <p class="text-gray-500 mb-8 max-w-md mx-auto">
+                Lo sentimos, la página que buscas no existe o ha sido movida. 
+                Regresa a tu galería privada para continuar explorando tus recuerdos.
+            </p>
+        </div>
+        
+        <div class="space-y-4">
+            <a id="homeBtn" href="#" class="inline-block bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl">
+                🏠 Ir a Galería Privada
+            </a>
+            
+            <div class="mt-6">
+                <p class="text-sm text-gray-400 mb-2">¿Problemas con un enlace compartido?</p>
+                <button onclick="history.back()" class="text-blue-500 hover:text-blue-700 text-sm underline">
+                    ← Volver a la página anterior
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configurar URL dinámica
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUrl = window.location.origin + window.location.pathname.replace('/404.html', '');
+            document.getElementById('homeBtn').href = currentUrl + '/';
+        });
+    </script>
+</body>
+</html>

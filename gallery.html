@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Galería - Galería Privada</title>
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/><circle cx='12' cy='13' r='3'/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="styles/gallery.css">
+    <style>
+        /* Estilos para selección */
+        .selection-mode .gallery-item,
+        .selection-mode .folder-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .gallery-item.selected,
+        .folder-item.selected {
+            transform: scale(0.95);
+            border: 3px solid #3b82f6;
+            border-radius: 8px;
+        }
+        
+        .gallery-item.selected::after,
+        .folder-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Estilos para long press */
+        .gallery-item:active,
+        .folder-item:active {
+            transform: scale(0.95);
+        }
+        
+        /* Estilos para el visor de imágenes mejorado */
+        .image-viewer-controls {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .image-viewer-controls button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .image-viewer-controls button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-900">📸 Galería Privada</h1>
+                    <span id="userWelcome" class="ml-4 text-gray-600"></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="logoutBtn" class="text-gray-600 hover:text-gray-900 transition-colors">
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white shadow-sm border-r">
+            <div class="p-4">
+                <!-- Búsqueda -->
+                <div class="mb-6">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Buscar archivos..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <button id="searchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <svg class="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M6 7l5 5-5 5"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="searchStatus" class="hidden mt-2 text-sm text-blue-600"></div>
+                    <button id="clearSearch" class="hidden mt-2 text-sm text-red-600 hover:text-red-800">
+                        Limpiar búsqueda
+                    </button>
+                </div>
+
+                <!-- Filtros avanzados -->
+                <div class="mb-6">
+                    <button id="toggleAdvancedFilters" class="text-sm text-gray-600 hover:text-gray-800">
+                        Mostrar filtros avanzados
+                    </button>
+                    <div id="advancedFilters" class="hidden mt-3 space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de archivo</label>
+                            <select id="filterType" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                                <option value="all">Todos</option>
+                                <option value="image">Imágenes</option>
+                                <option value="video">Videos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Desde</label>
+                            <input type="date" id="filterDateFrom" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Hasta</label>
+                            <input type="date" id="filterDateTo" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Ordenar por</label>
+                            <select id="sortBy" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                                <option value="name">Nombre</option>
+                                <option value="date">Fecha de captura</option>
+                                <option value="created">Fecha de subida</option>
+                                <option value="size">Tamaño</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Orden</label>
+                            <select id="sortOrder" class="w-full text-sm border border-gray-300 rounded px-2 py-1">
+                                <option value="asc">Ascendente</option>
+                                <option value="desc">Descendente</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navegación de carpetas -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-700 mb-3">Carpetas</h3>
+                    <nav id="folderNav" class="space-y-1"></nav>
+                </div>
+
+                <!-- Acciones -->
+                <div class="space-y-2">
+                    <button id="createFolderBtn" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        📁 Nueva Carpeta
+                    </button>
+                    <button id="shareCurrentFolderBtn" class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                        🔗 Compartir Carpeta
+                    </button>
+                </div>
+
+                <!-- Enlaces compartidos se agregan aquí dinámicamente -->
+            </div>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="flex-1 p-6">
+            <!-- Breadcrumb -->
+            <nav id="breadcrumb" class="mb-6 text-sm text-gray-600"></nav>
+
+            <!-- Área de subida -->
+            <div id="uploadArea" class="mb-6 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+                <div class="text-gray-500">
+                    <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Subir archivos</h3>
+                    <p>Arrastra y suelta archivos aquí o haz clic para seleccionar</p>
+                    <p class="text-sm mt-1">Soporta: JPG, PNG, GIF, WebP, MP4, MOV, AVI</p>
+                </div>
+                <input type="file" id="fileInput" multiple accept="image/*,video/*" class="hidden">
+            </div>
+
+            <!-- Controles de selección -->
+            <div class="mb-4 flex justify-between items-center">
+                <div class="flex space-x-2">
+                    <button id="selectAllBtn" class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                        Seleccionar todo
+                    </button>
+                    <button id="downloadSelectedBtn" disabled class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+                        Descargar seleccionados
+                    </button>
+                </div>
+                <div class="text-sm text-gray-500">
+                    <span>💡 Mantén presionado para seleccionar archivos individuales</span>
+                </div>
+            </div>
+
+            <!-- Estados de carga -->
+            <div id="loadingGallery" class="text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-600">Cargando galería...</p>
+            </div>
+
+            <div id="emptyState" class="hidden text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">📂</div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Carpeta vacía</h3>
+                <p class="text-gray-500 mb-6">Comienza subiendo algunos archivos o creando subcarpetas.</p>
+            </div>
+
+            <!-- Galería -->
+            <div id="galleryGrid" class="hidden grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+        </main>
+    </div>
+
+    <!-- Modal: Crear Carpeta -->
+    <div id="createFolderModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">Crear Nueva Carpeta</h3>
+            <form id="createFolderForm">
+                <input type="text" id="folderNameInput" placeholder="Nombre de la carpeta" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4">
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelCreateFolder" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Crear
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Compartir Carpeta -->
+    <div id="shareFolderModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold mb-4">Compartir Carpeta</h3>
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="protectDownloads" class="mr-2">
+                    <span class="text-sm">Proteger contra descargas</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1">Si se activa, previene la descarga y copia de archivos</p>
+            </div>
+            <div class="flex space-x-3 mb-4">
+                <button id="generateShareLink" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    Generar Enlace
+                </button>
+                <button id="cancelShareFolder" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancelar
+                </button>
+            </div>
+            <div id="generatedLink" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Enlace compartido:</label>
+                <div class="flex">
+                    <input type="text" id="shareUrl" readonly class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-sm">
+                    <button id="copyShareLink" class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition-colors">
+                        Copiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Visor de imágenes -->
+    <div id="imageViewerModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
+        <div class="relative max-w-4xl max-h-full mx-4">
+            <button id="closeImageViewer" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <img id="viewerImage" class="max-w-full max-h-screen object-contain" alt="">
+            
+            <!-- Controles del visor -->
+            <div class="image-viewer-controls">
+                <button id="downloadImageBtn" onclick="window.gallery.downloadCurrentImage()">
+                    📥 Descargar
+                </button>
+                <button id="editImageBtn" onclick="window.gallery.editCurrentImage()">
+                    ✏️ Editar
+                </button>
+                <button id="shareImageBtn" onclick="window.gallery.shareCurrentImage()">
+                    🔗 Compartir
+                </button>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-4">
+                <h4 id="viewerTitle" class="font-semibold"></h4>
+                <p id="viewerDescription" class="text-sm opacity-75"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalles de archivo -->
+    <div id="fileDetailsModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Detalles del Archivo</h3>
+                <button id="closeFileDetails" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="fileDetailsForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                    <input type="text" name="name" id="detailFileName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea name="description" id="detailDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Etiquetas (separadas por comas)</label>
+                    <input type="text" name="tags" id="detailTags" placeholder="naturaleza, paisaje, verano" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de captura</label>
+                    <input type="date" name="captureDate" id="detailCaptureDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notas</label>
+                    <textarea name="notes" id="detailNotes" rows="3" placeholder="Observaciones adicionales..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <!-- Información del archivo -->
+                <div class="border-t pt-4">
+                    <h4 class="font-medium text-gray-700 mb-3">Información del archivo</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Tamaño:</span>
+                            <span id="fileSize" class="ml-1 font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Tipo:</span>
+                            <span id="fileType" class="ml-1 font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Subido:</span>
+                            <span id="fileCreated" class="ml-1 font-medium"></span>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Modificado:</span>
+                            <span id="fileModified" class="ml-1 font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Metadatos EXIF -->
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-gray-700">Metadatos</h4>
+                        <button type="button" id="extractMetadata" class="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">
+                            Extraer Metadatos
+                        </button>
+                    </div>
+                    <div id="exifData" class="text-sm"></div>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" id="cancelFileDetails" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/crypto-utils.js"></script>
+    <script src="scripts/storage.js"></script>
+    <script src="scripts/auth.js"></script>
+    <script src="scripts/file-details.js"></script>
+    <script src="scripts/search-manager.js"></script>
+    <script src="scripts/download-manager.js"></script>
+    <script src="scripts/selection-manager.js"></script>
+    <script src="scripts/share-manager.js"></script>
+    <script src="scripts/gallery.js"></script>
+</body>
+</html>
