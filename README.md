@@ -1,4 +1,3 @@
-
 # Galería Privada
 
 Una aplicación web completa para crear galerías privadas de imágenes y videos, con funcionalidades de compartición y protección de contenido.
@@ -6,10 +5,11 @@ Una aplicación web completa para crear galerías privadas de imágenes y videos
 ## 🚀 Características
 
 - **Gestión de usuarios**: Registro e inicio de sesión seguros
-- **Subida de archivos**: Soporte para imágenes (JPG, PNG, GIF, WebP) y videos (MP4, MOV, AVI)
+- **Subida de archivos**: Soporte para imágenes (JPG, PNG, GIF, WebP), videos (MP4, MOV, AVI) y audio (MP3, WAV, OGG, AAC, M4A, FLAC)
 - **Organización**: Creación de carpetas y subcarpetas
 - **Compartición**: Enlaces públicos para carpetas con protección opcional
 - **Protección de contenido**: Bloqueo de descarga directa y copia de imágenes
+- **Reproductores integrados**: Visualización de videos y reproducción de audio con controles protegidos
 - **Interfaz responsiva**: Diseño moderno que funciona en móviles y escritorio
 
 ## 📋 Requisitos del servidor

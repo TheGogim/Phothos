@@ -176,6 +176,36 @@ textarea {
     font-size: 16px;
 }
 
+/* Estilos para reproductores de medios */
+video, audio {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Protección adicional para reproductores */
+video::-webkit-media-controls-download-button,
+audio::-webkit-media-controls-download-button {
+    display: none !important;
+}
+
+video::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+}
+
+/* Estilos para iconos de tipo de archivo */
+.media-type-indicator {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
 /* Scrollbar personalizado */
 ::-webkit-scrollbar {
     width: 8px;
