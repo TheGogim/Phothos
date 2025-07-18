@@ -290,13 +290,29 @@
 }
 
 .protected-content img,
-.protected-content video {
+.protected-content video,
+.protected-content audio {
     -webkit-user-drag: none;
     -khtml-user-drag: none;
     -moz-user-drag: none;
     -o-user-drag: none;
     user-drag: none;
     pointer-events: none;
+}
+
+/* Reproductores protegidos */
+.protected-content video[controls],
+.protected-content audio[controls] {
+    pointer-events: auto;
+}
+
+.protected-content video::-webkit-media-controls-download-button,
+.protected-content audio::-webkit-media-controls-download-button {
+    display: none;
+}
+
+.protected-content video::-webkit-media-controls-fullscreen-button {
+    display: none;
 }
 
 .protected-content::selection {
@@ -315,4 +331,42 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* Estilos para reproductores de audio */
+.audio-player {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: white;
+}
+
+.audio-player audio {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* Estilos para reproductores de video */
+.video-player {
+    background: #000;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.video-player video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Iconos de tipo de archivo */
+.file-type-icon {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
 }

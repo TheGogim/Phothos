@@ -135,6 +135,9 @@ class SearchManager {
                 if (this.currentFilters.type === 'video' && !file.type.startsWith('video/')) {
                     return false;
                 }
+                if (this.currentFilters.type === 'audio' && !file.type.startsWith('audio/')) {
+                    return false;
+                }
             }
 
             // Filtro por fecha

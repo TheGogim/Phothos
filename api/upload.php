@@ -167,6 +167,14 @@ function processFile($fileData, $uploadDir, $userId, $folderId) {
     $fileName = $fileData['name'];
     $filePath = $uploadDir . $fileId . '_' . $fileName;
     
+    // Validar tipos de archivo permitidos
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mkv', 'mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac'];
+    $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    
+    if (!in_array($fileExtension, $allowedExtensions)) {
+        throw new Exception('Tipo de archivo no permitido: ' . $fileExtension);
+    }
+    
     if (!move_uploaded_file($fileData['tmp_name'], $filePath)) {
         throw new Exception('Error moviendo archivo: ' . $fileName);
     }
@@ -175,6 +183,10 @@ function processFile($fileData, $uploadDir, $userId, $folderId) {
     $metadata = [];
     if (strpos($fileData['type'], 'image/') === 0) {
         $metadata = extractImageMetadata($filePath);
+    } elseif (strpos($fileData['type'], 'audio/') === 0) {
+        $metadata = extractAudioMetadata($filePath);
+    } elseif (strpos($fileData['type'], 'video/') === 0) {
+        $metadata = extractVideoMetadata($filePath);
     }
 
     // Crear metadatos del archivo
@@ -204,5 +216,46 @@ function processFile($fileData, $uploadDir, $userId, $folderId) {
     file_put_contents($metaDir . $fileId . '.json', json_encode($fileMetadata, JSON_PRETTY_PRINT));
 
     return $fileId;
+}
+
+/**
+ * Extrae metadatos de archivos de audio
+ */
+function extractAudioMetadata($filePath) {
+    $metadata = [];
+    
+    try {
+        // Obtener información básica del archivo
+        $fileInfo = pathinfo($filePath);
+        $metadata['format'] = strtoupper($fileInfo['extension']);
+        
+        // Intentar obtener duración usando getid3 si está disponible
+        // Por ahora, solo información básica
+        $metadata['mediaType'] = 'audio';
+        
+    } catch (Exception $e) {
+        error_log('Error extrayendo metadatos de audio: ' . $e->getMessage());
+    }
+    
+    return $metadata;
+}
+
+/**
+ * Extrae metadatos de archivos de video
+ */
+function extractVideoMetadata($filePath) {
+    $metadata = [];
+    
+    try {
+        // Obtener información básica del archivo
+        $fileInfo = pathinfo($filePath);
+        $metadata['format'] = strtoupper($fileInfo['extension']);
+        $metadata['mediaType'] = 'video';
+        
+    } catch (Exception $e) {
+        error_log('Error extrayendo metadatos de video: ' . $e->getMessage());
+    }
+    
+    return $metadata;
 }
 ?>

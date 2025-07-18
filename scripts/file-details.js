@@ -150,8 +150,8 @@ class FileDetailsManager {
             document.getElementById('extractMetadata').disabled = true;
             document.getElementById('extractMetadata').textContent = 'Extrayendo...';
 
-            // Para imágenes, intentar extraer EXIF
             if (this.currentFile.type.startsWith('image/')) {
+                // Para imágenes, intentar extraer EXIF
                 const img = new Image();
                 img.onload = () => {
                     // Datos básicos de la imagen
@@ -171,6 +171,34 @@ class FileDetailsManager {
                     this.gallery.showToast('Metadatos básicos extraídos', 'success');
                 };
                 img.src = this.currentFile.path;
+            } else if (this.currentFile.type.startsWith('video/')) {
+                // Para videos, extraer información básica
+                const video = document.createElement('video');
+                video.onloadedmetadata = () => {
+                    const videoData = {
+                        duration: this.formatDuration(video.duration),
+                        width: video.videoWidth,
+                        height: video.videoHeight,
+                        resolution: `${video.videoWidth} x ${video.videoHeight}`
+                    };
+                    
+                    this.displayExifData(videoData);
+                    this.gallery.showToast('Metadatos de video extraídos', 'success');
+                };
+                video.src = this.currentFile.path;
+            } else if (this.currentFile.type.startsWith('audio/')) {
+                // Para audio, extraer información básica
+                const audio = document.createElement('audio');
+                audio.onloadedmetadata = () => {
+                    const audioData = {
+                        duration: this.formatDuration(audio.duration),
+                        format: this.currentFile.name.split('.').pop().toUpperCase()
+                    };
+                    
+                    this.displayExifData(audioData);
+                    this.gallery.showToast('Metadatos de audio extraídos', 'success');
+                };
+                audio.src = this.currentFile.path;
             }
 
         } catch (error) {
@@ -182,6 +210,24 @@ class FileDetailsManager {
         }
     }
 
+    /**
+     * Formatea la duración en segundos a formato legible
+     * @param {number} seconds - Duración en segundos
+     * @returns {string} Duración formateada
+     */
+    formatDuration(seconds) {
+        if (isNaN(seconds)) return 'Desconocida';
+        
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = Math.floor(seconds % 60);
+        
+        if (hours > 0) {
+            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        } else {
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+    }
     /**
      * Intenta extraer fecha del nombre del archivo
      * @param {string} filename - Nombre del archivo

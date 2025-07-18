@@ -307,9 +307,32 @@ class GalleryApp {
         element.dataset.fileId = file.id;
         
         const isVideo = file.type.startsWith('video/');
-        const mediaElement = isVideo ? 
-            `<video src="${file.path}" muted class="w-full h-40 object-cover"></video>` : 
-            `<img src="${file.path}" alt="${file.name}" class="w-full h-40 object-cover">`;
+        const isAudio = file.type.startsWith('audio/');
+        
+        let mediaElement;
+        if (isVideo) {
+            mediaElement = `
+                <div class="relative w-full h-40 bg-gray-900 flex items-center justify-center">
+                    <video src="${file.path}" class="w-full h-full object-cover" preload="metadata"></video>
+                    <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                        <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </div>
+                </div>`;
+        } else if (isAudio) {
+            mediaElement = `
+                <div class="relative w-full h-40 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                    <div class="absolute bottom-2 left-2 right-2">
+                        <div class="text-white text-xs font-medium truncate">${file.name}</div>
+                    </div>
+                </div>`;
+        } else {
+            mediaElement = `<img src="${file.path}" alt="${file.name}" class="w-full h-40 object-cover">`;
+        }
 
         // Formatear fecha de captura o creación
         const displayDate = file.captureDate ? 
@@ -364,13 +387,25 @@ class GalleryApp {
             </div>
         `;
 
-        if (!isVideo) {
+        // Agregar event listeners según el tipo de archivo
+        if (isVideo || isAudio) {
+            const mediaContainer = element.querySelector('.relative');
+            if (mediaContainer) {
+                mediaContainer.addEventListener('click', (e) => {
+                    if (!e.target.closest('.gallery-item-select') && !e.target.closest('.gallery-item-actions')) {
+                        this.showMediaViewer(file);
+                    }
+                });
+            }
+        } else {
             const mediaImg = element.querySelector('img');
-            mediaImg.addEventListener('click', (e) => {
-                if (!e.target.closest('.gallery-item-select') && !e.target.closest('.gallery-item-actions')) {
-                    this.showImageViewer(file);
-                }
-            });
+            if (mediaImg) {
+                mediaImg.addEventListener('click', (e) => {
+                    if (!e.target.closest('.gallery-item-select') && !e.target.closest('.gallery-item-actions')) {
+                        this.showImageViewer(file);
+                    }
+                });
+            }
         }
 
         return element;
@@ -712,9 +747,66 @@ class GalleryApp {
     }
 
     /**
+     * Muestra el visor de medios (video/audio)
+     * @param {Object} file - Datos del archivo
+     */
+    showMediaViewer(file) {
+        this.currentImageFile = file;
+        const isVideo = file.type.startsWith('video/');
+        const isAudio = file.type.startsWith('audio/');
+        
+        const viewerContainer = document.getElementById('imageViewerModal');
+        const imageElement = document.getElementById('viewerImage');
+        
+        // Limpiar contenido anterior
+        const existingMedia = viewerContainer.querySelector('video, audio');
+        if (existingMedia) {
+            existingMedia.remove();
+        }
+        
+        if (isVideo) {
+            imageElement.style.display = 'none';
+            const videoElement = document.createElement('video');
+            videoElement.src = file.path;
+            videoElement.controls = true;
+            videoElement.className = 'max-w-full max-h-screen object-contain mx-auto rounded-lg';
+            videoElement.style.maxHeight = '80vh';
+            imageElement.parentNode.insertBefore(videoElement, imageElement);
+        } else if (isAudio) {
+            imageElement.style.display = 'none';
+            const audioContainer = document.createElement('div');
+            audioContainer.className = 'flex flex-col items-center justify-center p-8';
+            audioContainer.innerHTML = `
+                <div class="w-48 h-48 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-6">
+                    <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <audio src="${file.path}" controls class="w-full max-w-md">
+                    Tu navegador no soporta la reproducción de audio.
+                </audio>
+            `;
+            imageElement.parentNode.insertBefore(audioContainer, imageElement);
+        } else {
+            imageElement.style.display = 'block';
+            imageElement.src = file.path;
+        }
+        
+        document.getElementById('viewerTitle').textContent = file.name;
+        document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
+        viewerContainer.classList.remove('hidden');
+    }
+    /**
      * Oculta el visor de imágenes
      */
     hideImageViewer() {
+        // Limpiar elementos de media
+        const viewerContainer = document.getElementById('imageViewerModal');
+        const existingMedia = viewerContainer.querySelectorAll('video, audio, .flex.flex-col');
+        existingMedia.forEach(el => el.remove());
+        
+        // Restaurar imagen
+        document.getElementById('viewerImage').style.display = 'block';
         document.getElementById('imageViewerModal').classList.add('hidden');
         this.currentImageFile = null;
     }
