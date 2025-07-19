@@ -238,6 +238,8 @@ try {
                             $userData['folders'][$folderId]['files'],
                             function($id) use ($fileId) { return $id !== $fileId; }
                         );
+                        // Reindexar el array para evitar problemas
+                        $userData['folders'][$folderId]['files'] = array_values($userData['folders'][$folderId]['files']);
                         $userData['folders'][$folderId]['modifiedAt'] = date('c');
                         file_put_contents($userDataFile, json_encode($userData, JSON_PRETTY_PRINT));
                     }

@@ -196,6 +196,17 @@ video, audio {
     border: none;
 }
 
+/* Animación de rotación para discos de audio */
+.audio-disc {
+    animation: rotate 20s linear infinite;
+    animation-play-state: paused;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Ocultar controles de descarga en reproductores nativos */
 .custom-protected-player video::-webkit-media-controls-download-button,
 .custom-protected-player audio::-webkit-media-controls-download-button {

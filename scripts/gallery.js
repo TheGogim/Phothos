@@ -752,8 +752,12 @@ class GalleryApp {
         
         imageElement.style.display = 'block';
         imageElement.src = file.path;
-        document.getElementById('viewerTitle').textContent = file.name;
-        document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
+        
+        const titleElement = document.getElementById('viewerTitle');
+        const descElement = document.getElementById('viewerDescription');
+        if (titleElement) titleElement.textContent = file.name;
+        if (descElement) descElement.textContent = file.description || 'Sin descripción';
+        
         viewerContainer.classList.remove('hidden');
     }
 
@@ -783,8 +787,11 @@ class GalleryApp {
             this.createCustomAudioPlayer(file, imageElement.parentNode, imageElement);
         }
         
-        document.getElementById('viewerTitle').textContent = file.name;
-        document.getElementById('viewerDescription').textContent = file.description || 'Sin descripción';
+        const titleElement = document.getElementById('viewerTitle');
+        const descElement = document.getElementById('viewerDescription');
+        if (titleElement) titleElement.textContent = file.name;
+        if (descElement) descElement.textContent = file.description || 'Sin descripción';
+        
         viewerContainer.classList.remove('hidden');
     }
 
